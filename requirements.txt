@@ -12,3 +12,13 @@ pathlib==1.0.1
 python-snappy==0.6.0
 scikit-learn==1.0.2
 typing-extensions==4.3.0
+pandas==1.4.4
+numpy==1.21.5
+scipy==1.9.1
+plotly==5.9.0
+shap==0.41.0
+requests==2.28.1
+streamlit==1.20.0
+matplotlib==3.5.2
+evidently==0.2.8
+pytest==7.4.0
