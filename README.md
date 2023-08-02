@@ -43,3 +43,5 @@ Différents packages Python ont été utilisés:
 - requests 2.28.1
 - streamlit 1.20.0
 - matplotlib 3.5.2
+- evidently 0.2.8
+- pytest 7.4.0
