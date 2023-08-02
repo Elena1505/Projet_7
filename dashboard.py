@@ -2,9 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import json
+import requests
+import mlflow
+import shap
 import pickle
 import matplotlib.pyplot as plt
-import shap
 
 df = pd.read_csv("data.csv")
 
@@ -22,7 +25,22 @@ def pie_chart():
                 " customer (7.75%)._")
 
 
-# Feature importances for all customer
+def feature_importances_customer(index):
+    model_name = "KNeighborsClassifier"
+    model_version = 18
+    model = mlflow.sklearn.load_model(model_uri=f"models:/{model_name}/{model_version}")
+    df = pd.read_csv("data.csv", nrows=20)
+    df = df.drop(["Unnamed: 0", "SK_ID_CURR"], axis=1)
+    test_x = df.iloc[:5]
+    train_x = df.iloc[5:14]
+    explainer = shap.KernelExplainer(model.predict_proba, train_x)
+    data = test_x.iloc[[index]]
+    shap_values = explainer.shap_values(data)
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    st.pyplot(shap.force_plot(explainer.expected_value[0], shap_values[0],
+                              feature_names=df.columns, matplotlib=True))
+
+
 def feature_importances():
     df = pd.read_csv("data.csv")
     df = df.drop(["Unnamed: 0", "TARGET", "SK_ID_CURR"], axis=1)
@@ -31,13 +49,6 @@ def feature_importances():
     fig, ax = plt.subplots(figsize=(10, 10))
     shap.summary_plot(shap_values, features=df.columns, max_display=10)
     st.pyplot(fig)
-
-
-def validator_id(id):
-    valid_id = 0
-    if id == "100002" or id == "100003" or id == "100004" or id == "100006" or id == "100007":
-        valid_id = 1
-    return valid_id
 
 
 # Gender pie chart
@@ -97,6 +108,45 @@ def children_pie_chart(id, data):
                 " 1.36% 3 children and less than 1% of customers have between 4 and 6 children._")
 
 
+# Request prediction
+def request_prediction(model_uri, index):
+    j_index = json.dumps({"value": index})
+    print("j_index", j_index)
+    headers = {"Content-Type": "application/json"}
+    request = requests.post(model_uri, data=j_index, headers=headers)
+    print("req", request)
+    req = request.json()
+    proba = req["proba"]
+    proba = str(proba)
+    rep = req["rep"]
+    if rep == 'Acceptée':
+        pred = "creditworthy."
+    else:
+        pred = "non creditworthy."
+    return pred, proba
+
+
+def validator_id(id):
+    valid_id = 0
+    if id == "100002" or id == "100003" or id == "100004" or id == "100006" or id == "100007":
+        valid_id = 1
+    return valid_id
+
+
+def id_to_index(id):
+    if id == "100002":
+        index = 0
+    if id == "100003":
+        index = 1
+    if id == "100004":
+        index = 2
+    if id == "100006":
+        index = 3
+    if id == "100007":
+        index = 4
+    return index
+
+
 def main():
     st.set_page_config(page_title="Scoring credit", page_icon=":dollar:")
 
@@ -104,16 +154,17 @@ def main():
     st.markdown("Welcome to this Interactive Dashboard! In a first part, you will find general information"
                 " about customers and feature importances. In a second part you will find more specific"
                 " informations about specific customer. ")
+
     st.markdown('**Percentage of customer creditworthiness**')
     pie_chart()
     st.markdown("**Feature importances**")
     feature_importances()
 
-
     st.subheader("Choose your customer and an action:")
     id = st.text_input('Choose a customer id among : 100002, 100003, 100004, 100006, 100007')
 
     info_btn = st.button('Customer informations')
+    predict_btn = st.button('Creditworthiness prediction')
 
     if info_btn:
         valid_id = validator_id(id)
@@ -139,6 +190,22 @@ def main():
 
         else:
             st.text("Please enter a valid id!")
+
+    if predict_btn:
+        valid_id = validator_id(id)
+        if valid_id == 1:
+            st.subheader("Creditworthiness prediction for the customer " + id + ":")
+            api_uri = 'http://127.0.0.1:5000/'
+            index = id_to_index(id)
+            pred, proba = request_prediction(api_uri, index)
+            st.text("The score is : " + proba + ", so the customer is " + pred)
+
+        else:
+            st.text("Please enter a valid id!")
+
+        st.subheader("Feature importances for the customer " + id + ":")
+        index = id_to_index(id)
+        feature_importances_customer(index)
 
 
 if __name__ == '__main__':
