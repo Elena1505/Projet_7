@@ -18,7 +18,6 @@ dash-core-components==2.0.0
 dash-html-components==2.0.0
 dash-table==5.0.0
 databricks-cli==0.17.4
-datashape==0.5.4
 deepchem==2.7.1
 distlib==0.3.6
 docker==6.0.1
