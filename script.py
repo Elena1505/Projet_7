@@ -2,8 +2,18 @@ import pandas as pd
 import numpy as np
 import warnings
 
-from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, confusion_matrix, precision_score, recall_score
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import make_column_transformer, make_column_selector
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LogisticRegression
+
+from lightgbm import LGBMClassifier
+from imblearn.pipeline import Pipeline
 
 
 # Preprocess application_train.csv
@@ -68,4 +78,27 @@ if __name__ == "__main__":
     print(" - Percentage of 0: {}".format(percentage_0))
     print(" - Percentage of 1: {}".format(percentage_1))
 
+    # Pipeline that aggregates preprocessing steps (encoder + scaler + model)
+
+    ct = make_column_transformer(
+        (OneHotEncoder(handle_unknown="ignore", sparse=False), make_column_selector(dtype_include=object)),
+        (StandardScaler(with_mean=False), make_column_selector(dtype_exclude=object)))
+
+    steps = [("t", ct),
+             ("model", LGBMClassifier())]
+    pipe = Pipeline(steps)
+    pipe.fit(train_x, train_y)
+
+    # GridSearchCV that allows to choose the best model for the problem
+    # I add the param class_weight="balanced" to deal with imbalanced class
+    param_grid = {"model": [LGBMClassifier(class_weight="balanced"),
+                            LogisticRegression(class_weight="balanced"),
+                            DecisionTreeClassifier(class_weight="balanced"),
+                            RandomForestClassifier(class_weight="balanced"),
+                            SVC(class_weight="balanced")]}
+
+    grid = GridSearchCV(pipe, param_grid, cv=5, n_jobs=-1, scoring="f1")
+    grid.fit(train_x, train_y)
+    print("\nGridSearchCV: ")
+    print("    Best score ", grid.best_score_, "using ", grid.best_params_)
 
