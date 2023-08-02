@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import warnings
+import mlflow
 
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -9,11 +10,13 @@ from sklearn.compose import make_column_transformer, make_column_selector
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.linear_model import LogisticRegression
 
 from lightgbm import LGBMClassifier
 from imblearn.pipeline import Pipeline
+from scipy.stats import randint as sp_randInt
+from scipy.stats import uniform as sp_randFloat
 
 
 # Preprocess application_train.csv
@@ -101,4 +104,53 @@ if __name__ == "__main__":
     grid.fit(train_x, train_y)
     print("\nGridSearchCV: ")
     print("    Best score ", grid.best_score_, "using ", grid.best_params_)
+
+
+
+    # Start the model with mlflow
+    with mlflow.start_run():
+        # Pipeline that aggregates preprocessing steps (encoder + scaler + model)
+        ct = make_column_transformer(
+            (OneHotEncoder(handle_unknown="ignore"), make_column_selector(dtype_include=object)),
+            (StandardScaler(with_mean=False), make_column_selector(dtype_exclude=object)))
+
+        steps_model = [("t", ct),
+                       ("lgbmc", LGBMClassifier(class_weight="balanced"))]
+        pipe_model = Pipeline(steps_model)
+        pipe_model.fit(train_x, train_y)
+
+        # RandomizedSearchCV that allows to choose the best hyperparameters
+        param_random = {"lgbmc__num_leaves": sp_randInt(5, 50),
+                        "lgbmc__max_depth": sp_randInt(-1, 15),
+                        "lgbmc__learning_rate": sp_randFloat(0, 1.0),
+                        "lgbmc__n_estimators": sp_randInt(10, 100)}
+        random = RandomizedSearchCV(pipe_model, param_random, cv=5, n_jobs=-1, scoring="f1")
+        random.fit(train_x, train_y.values.ravel())
+        print("\nRandomizedSearchCV: ")
+        print("    Best score: ", random.best_score_, "using", random.best_params_)
+
+        pipe_model.set_params(**random.best_params_)
+        pipe_model.fit(train_x, train_y)
+
+        predicted_qualities = pipe_model.predict(test_x)
+
+        (f1, AUC, accuracy, bank_gain) = eval_metrics(test_y, predicted_qualities)
+
+        print("\n LGBMClassifier model using the bests hyperparameters: ")
+        print(" - Accuracy: %s" % accuracy)
+        print(" - AUC: %s" % AUC)
+        print(" - F1 score: %s" % f1)
+        print(" - Bank cost: %s" % bank_gain)
+
+        # Params recovery
+        mlflow.log_param("num_leaves", random.best_params_["lgbmc__num_leaves"])
+        mlflow.log_param("max_depth", random.best_params_["lgbmc__max_depth"])
+        mlflow.log_param("learning_rate", random.best_params_["lgbmc__learning_rate"])
+        mlflow.log_param("n_estimators", random.best_params_["lgbmc__n_estimators"])
+
+        # Metrics recovery
+        mlflow.log_metric("accuracy", accuracy)
+        mlflow.log_metric("AUC", AUC)
+        mlflow.log_metric("f1_score", f1)
+        mlflow.log_metric("bank_cost", bank_gain)
 
