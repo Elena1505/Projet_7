@@ -57,6 +57,18 @@ def eval_metrics(actual, pred):
     return f1, AUC, accuracy, bank_cost
 
 
+# Threshold optimization
+def optimize_threshold(clf, train_x, train_y):
+    threshold_lst = np.linspace(0.0, 1, 10)
+    cost_fct = {}
+    for threshold in threshold_lst:
+        predict = pd.Series(clf.predict_proba(train_x)[:, 1]).apply(lambda x: 0 if x < threshold else 1)
+        cost_fct[threshold] = cost(train_y, predict, 0, 10, 0, 1)
+    best_threshold = min(cost_fct, key=lambda k: cost_fct[k])
+    print("\nCost list: ", cost_fct, "\nThe best threshold is: ", best_threshold)
+    return best_threshold
+
+
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
     warnings.simplefilter("ignore")
@@ -105,8 +117,6 @@ if __name__ == "__main__":
     print("\nGridSearchCV: ")
     print("    Best score ", grid.best_score_, "using ", grid.best_params_)
 
-
-
     # Start the model with mlflow
     with mlflow.start_run():
         # Pipeline that aggregates preprocessing steps (encoder + scaler + model)
@@ -135,6 +145,7 @@ if __name__ == "__main__":
         predicted_qualities = pipe_model.predict(test_x)
 
         (f1, AUC, accuracy, bank_gain) = eval_metrics(test_y, predicted_qualities)
+        best_threshold = optimize_threshold(random.best_estimator_, train_x, train_y)
 
         print("\n LGBMClassifier model using the bests hyperparameters: ")
         print(" - Accuracy: %s" % accuracy)
@@ -153,4 +164,5 @@ if __name__ == "__main__":
         mlflow.log_metric("AUC", AUC)
         mlflow.log_metric("f1_score", f1)
         mlflow.log_metric("bank_cost", bank_gain)
+        mlflow.log_metric("Threshold", best_threshold)
 
