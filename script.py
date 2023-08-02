@@ -23,11 +23,23 @@ def application_train(num_rows=None, nan_as_category=False):
     return df
 
 
+# Assigning a weight to FN and FP
+def cost(actual, pred, TN_val=0, FN_val=10, TP_val=0, FP_val=1):
+    matrix = confusion_matrix(actual, pred)
+    TN = matrix[0, 0]
+    FN = matrix[1, 0]
+    FP = matrix[0, 1]
+    TP = matrix[1, 1]
+    total_cost = TP * TP_val + TN * TN_val + FP * FP_val + FN * FN_val
+    return total_cost
+
+
 # Metrics
 def eval_metrics(actual, pred):
     accuracy = accuracy_score(actual, pred)
     AUC = roc_auc_score(actual, pred)
     f1 = f1_score(actual, pred)
-    return f1, AUC, accuracy
+    bank_cost = cost(actual, pred)
+    return f1, AUC, accuracy, bank_cost
 
 
