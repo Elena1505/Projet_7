@@ -10,7 +10,6 @@ bkcharts==0.2
 blinker==1.5
 brotlipy==0.7.0
 cachetools==5.3.0
-conda==23.3.1
 conda-build==3.22.0
 conda-repo-cli==1.0.20
 conda-verify==3.4.2
