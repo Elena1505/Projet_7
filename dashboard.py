@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import pickle
+import matplotlib.pyplot as plt
+import shap
 
 df = pd.read_csv("data.csv")
 
@@ -17,6 +20,17 @@ def pie_chart():
     st.plotly_chart(fig)
     st.markdown("_This pie chart shows the proportion of creditworthy customer (92.3%) and non creditworthy"
                 " customer (7.75%)._")
+
+
+# Feature importances for all customer
+def feature_importances():
+    df = pd.read_csv("data.csv")
+    df = df.drop(["Unnamed: 0", "TARGET", "SK_ID_CURR"], axis=1)
+    with open("shap_val.pickle", "rb") as f:
+        shap_values = pickle.load(f)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    shap.summary_plot(shap_values, features=df.columns, max_display=10)
+    st.pyplot(fig)
 
 
 def validator_id(id):
@@ -92,6 +106,9 @@ def main():
                 " informations about specific customer. ")
     st.markdown('**Percentage of customer creditworthiness**')
     pie_chart()
+    st.markdown("**Feature importances**")
+    feature_importances()
+
 
     st.subheader("Choose your customer and an action:")
     id = st.text_input('Choose a customer id among : 100002, 100003, 100004, 100006, 100007')
