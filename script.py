@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import warnings
 import mlflow
+import pickle
 
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -17,6 +18,8 @@ from lightgbm import LGBMClassifier
 from imblearn.pipeline import Pipeline
 from scipy.stats import randint as sp_randInt
 from scipy.stats import uniform as sp_randFloat
+from mlflow.models.signature import infer_signature
+
 
 
 # Preprocess application_train.csv
@@ -165,4 +168,23 @@ if __name__ == "__main__":
         mlflow.log_metric("f1_score", f1)
         mlflow.log_metric("bank_cost", bank_gain)
         mlflow.log_metric("Threshold", best_threshold)
+
+        mlflow.sklearn.log_model(sk_model=random.best_estimator_, artifact_path="sklearn_model",
+                                 registered_model_name="LGBMClassifier")
+
+        # Model backup
+        steps_model_final = [("t", random.best_estimator_[0]),
+                             ("lgbmc", random.best_estimator_[1])]
+        pipe_model_final = Pipeline(steps_model_final)
+        signature = infer_signature(train_x, train_y)
+        mlflow.sklearn.save_model(pipe_model_final, 'mlflow_model', signature=signature)
+
+        df_id.to_csv("data.csv")
+        train_x.to_csv('train_x.csv')
+        train_y.to_csv('train_y.csv')
+        test_x.to_csv('test_x.csv')
+        test_y.to_csv('test_y.csv')
+        with open("best_threshold.pickle", "wb") as f:
+            pickle.dump(best_threshold, f)
+
 
