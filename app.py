@@ -14,7 +14,7 @@ def predict(index, data, best_model, thres):
     return rep, round(proba, 2)
 
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['POST', 'GET'])
 def prediction():
     index = request.get_json()
     index = int(index["value"])
