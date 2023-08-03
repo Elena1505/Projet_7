@@ -49,7 +49,7 @@ def feature_importances():
     fig, ax = plt.subplots(figsize=(10, 10))
     shap.summary_plot(shap_values, features=df.columns, max_display=10)
     st.pyplot(fig)
-
+    st.markdown("This summary plot ")
 
 # Gender pie chart
 def gender_pie_chart():
@@ -153,7 +153,9 @@ def main():
     st.title('Interactive dashboard')
     st.markdown("Welcome to this Interactive Dashboard! In a first part, you will find general information"
                 " about customers and feature importances. In a second part you will find more specific"
-                " informations about specific customer. ")
+                " informations about specific customer.")
+    st.markdown("You can drag your cursor over the graphs to see details. Then click on the arrow to enlarge the "
+                "graphs.")
 
     st.markdown('**Percentage of customer creditworthiness**')
     pie_chart()
@@ -195,7 +197,7 @@ def main():
         valid_id = validator_id(id)
         if valid_id == 1:
             st.subheader("Creditworthiness prediction for the customer " + id + ":")
-            api_uri = 'http://127.0.0.1:5000/'
+            api_uri = 'https://scoring-credit.herokuapp.com/'
             index = id_to_index(id)
             pred, proba = request_prediction(api_uri, index)
             st.text("The score is : " + proba + ", so the customer is " + pred)
