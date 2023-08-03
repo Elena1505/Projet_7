@@ -27,7 +27,7 @@ def prediction():
 if __name__ == "__main__":
     data = pd.read_csv("data.csv")
     model_name = "LGBMClassifier"
-    model_version = 1
+    model_version = 4
     best_model = mlflow.sklearn.load_model(model_uri=f"models:/{model_name}/{model_version}")
     with open("best_threshold.pickle", "rb") as f:
         thres = pickle.load(f)
