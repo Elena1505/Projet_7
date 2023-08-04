@@ -1,0 +1,12 @@
+creation_timestamp: 1680117586049
+current_stage: None
+description: null
+last_updated_timestamp: 1680117586049
+name: KNeighborsClassifier
+run_id: 603edaec6c644b27a2eab4014658234f
+run_link: null
+source: file:///home/elena/Bureau/Openclassroom/Projet%207/Projet/mlruns/0/603edaec6c644b27a2eab4014658234f/artifacts/sklearn_model
+status: READY
+status_message: null
+user_id: null
+version: 15
