@@ -9,7 +9,7 @@ import shap
 import pickle
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("data.csv")
+df = pd.read_csv("app/data.csv")
 
 
 # Pie chart
@@ -29,7 +29,7 @@ def feature_importances_customer(index):
     model_name = "KNeighborsClassifier"
     model_version = 18
     model = mlflow.sklearn.load_model(model_uri=f"models:/{model_name}/{model_version}")
-    df = pd.read_csv("data.csv", nrows=20)
+    df = pd.read_csv("app/data.csv", nrows=20)
     df = df.drop(["Unnamed: 0", "SK_ID_CURR"], axis=1)
     test_x = df.iloc[:5]
     train_x = df.iloc[5:14]
@@ -39,17 +39,29 @@ def feature_importances_customer(index):
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.pyplot(shap.force_plot(explainer.expected_value[0], shap_values[0],
                               feature_names=df.columns, matplotlib=True))
+    st.markdown("_This force plot can provide valuable insights into how individual features contribute to the"
+                " predictions of a machine learning model. he color of each feature's bar indicates the direction of"
+                " its impact on the prediction. Blue indicates a negative impact, while red indicates a positive "
+                "impact._")
+    st.markdown("_The baseline SHAP value (represented by a vertical line) represents the average or "
+                "expected output of the model across the dataset._")
 
 
 def feature_importances():
-    df = pd.read_csv("data.csv")
+    df = pd.read_csv("app/data.csv")
     df = df.drop(["Unnamed: 0", "TARGET", "SK_ID_CURR"], axis=1)
     with open("shap_val.pickle", "rb") as f:
         shap_values = pickle.load(f)
     fig, ax = plt.subplots(figsize=(10, 10))
     shap.summary_plot(shap_values, features=df.columns, max_display=10)
     st.pyplot(fig)
-    st.markdown("This summary plot ")
+    st.markdown("_This summary plot can be a valuable way to understand the impact of different features on the"
+                " predictions of a machine learning model. The features with the largest absolute SHAP values have"
+                " the most significant impact on the model's predictions. If a feature has a high positive SHAP value,"
+                " it is positively contributing to the prediction._")
+    st.markdown("_The color coding of each feature represents the value of the feature for each data point relative to"
+                " the baseline value. Positive feature values are typically shown in shades of red, while negative "
+                "values are shown in shades of blue._")
 
 # Gender pie chart
 def gender_pie_chart():
@@ -197,7 +209,7 @@ def main():
         valid_id = validator_id(id)
         if valid_id == 1:
             st.subheader("Creditworthiness prediction for the customer " + id + ":")
-            api_uri = 'https://scoring-credit.herokuapp.com/'
+            api_uri ='http://127.0.0.1:5000/'
             index = id_to_index(id)
             pred, proba = request_prediction(api_uri, index)
             st.text("The score is : " + proba + ", so the customer is " + pred)
