@@ -1,0 +1,15 @@
+artifact_uri: file:///home/elena/Bureau/Openclassroom/Projet%207/ProjetF/mlruns/0/4a88b4455b294951975aae786c077bba/artifacts
+end_time: 1690984267118
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 4a88b4455b294951975aae786c077bba
+run_name: orderly-perch-926
+run_uuid: 4a88b4455b294951975aae786c077bba
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1690984182585
+status: 3
+tags: []
+user_id: elena

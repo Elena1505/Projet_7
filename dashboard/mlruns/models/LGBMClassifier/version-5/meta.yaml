@@ -1,0 +1,12 @@
+creation_timestamp: 1691045752388
+current_stage: None
+description: null
+last_updated_timestamp: 1691045752388
+name: LGBMClassifier
+run_id: f2c8d71ef4c6457c99ef9e17546fb5f3
+run_link: null
+source: file:///home/elena/Bureau/Openclassroom/Projet%207/ProjetF/mlruns/0/f2c8d71ef4c6457c99ef9e17546fb5f3/artifacts/sklearn_model
+status: READY
+status_message: null
+user_id: null
+version: 5
