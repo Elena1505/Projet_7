@@ -1,10 +1,15 @@
 from flask import Flask, request, jsonify
 import pandas as pd
-import mlflow
 import pickle
 
-
 app = Flask(__name__)
+data = pd.read_csv("data.csv")
+
+with open("best_threshold.pickle", "rb") as f:
+    thres = pickle.load(f)
+
+with open("model.pkl", "rb") as f:
+    best_model = pickle.load(f)
 
 
 def predict(index, data, best_model, thres):
@@ -14,21 +19,24 @@ def predict(index, data, best_model, thres):
     return rep, round(proba, 2)
 
 
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    return "Home application"
+
+
+@app.route('/prediction', methods=['GET', 'POST'])
 def prediction():
-    index = request.get_json()
-    index = int(index["value"])
-    data_index = data.iloc[[index]]
-    rep, proba = predict(index, data_index, best_model, thres)
-    d = {'rep': rep, 'proba': proba}
-    return jsonify(d)
+    try:
+        index = request.get_json()
+        print(index)
+        index = int(index["value"])
+        data_index = data.iloc[[index]]
+        rep, proba = predict(index, data_index, best_model, thres)
+        d = {'rep': rep, 'proba': proba}
+        return jsonify(d)
+    except Exception as e:
+        return jsonify({"erreur": str(e)})
 
 
 if __name__ == "__main__":
-    data = pd.read_csv("data.csv")
-    model_name = "LGBMClassifier"
-    model_version = 4
-    best_model = mlflow.sklearn.load_model(model_uri=f"models:/{model_name}/{model_version}")
-    with open("best_threshold.pickle", "rb") as f:
-        thres = pickle.load(f)
     app.run(debug=True)

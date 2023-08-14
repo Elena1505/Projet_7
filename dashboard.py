@@ -9,7 +9,11 @@ import shap
 import pickle
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("app/data.csv")
+df = pd.read_csv("data.csv")
+with open("model_knc.pkl", "rb") as f:
+    model_knc = pickle.load(f)
+with open("shap_val.pickle", "rb") as f:
+    shap_values = pickle.load(f)
 
 
 # Pie chart
@@ -26,14 +30,11 @@ def pie_chart():
 
 
 def feature_importances_customer(index):
-    model_name = "KNeighborsClassifier"
-    model_version = 18
-    model = mlflow.sklearn.load_model(model_uri=f"models:/{model_name}/{model_version}")
-    df = pd.read_csv("app/data.csv", nrows=20)
-    df = df.drop(["Unnamed: 0", "SK_ID_CURR"], axis=1)
-    test_x = df.iloc[:5]
-    train_x = df.iloc[5:14]
-    explainer = shap.KernelExplainer(model.predict_proba, train_x)
+    df_fi = df.head(20)
+    df_fi = df.drop(["Unnamed: 0", "SK_ID_CURR"], axis=1)
+    test_x = df_fi.iloc[:5]
+    train_x = df_fi.iloc[5:14]
+    explainer = shap.KernelExplainer(model_knc.predict_proba, train_x)
     data = test_x.iloc[[index]]
     shap_values = explainer.shap_values(data)
     st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -48,10 +49,8 @@ def feature_importances_customer(index):
 
 
 def feature_importances():
-    df = pd.read_csv("app/data.csv")
+    df = pd.read_csv("data.csv")
     df = df.drop(["Unnamed: 0", "TARGET", "SK_ID_CURR"], axis=1)
-    with open("shap_val.pickle", "rb") as f:
-        shap_values = pickle.load(f)
     fig, ax = plt.subplots(figsize=(10, 10))
     shap.summary_plot(shap_values, features=df.columns, max_display=10)
     st.pyplot(fig)
@@ -62,6 +61,7 @@ def feature_importances():
     st.markdown("_The color coding of each feature represents the value of the feature for each data point relative to"
                 " the baseline value. Positive feature values are typically shown in shades of red, while negative "
                 "values are shown in shades of blue._")
+
 
 # Gender pie chart
 def gender_pie_chart():
@@ -209,7 +209,7 @@ def main():
         valid_id = validator_id(id)
         if valid_id == 1:
             st.subheader("Creditworthiness prediction for the customer " + id + ":")
-            api_uri ='http://127.0.0.1:5000/'
+            api_uri = 'https://scoring-credit-app-e49e74730d55.herokuapp.com/prediction'
             index = id_to_index(id)
             pred, proba = request_prediction(api_uri, index)
             st.text("The score is : " + proba + ", so the customer is " + pred)
