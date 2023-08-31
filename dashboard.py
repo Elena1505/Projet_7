@@ -10,6 +10,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 df = pd.read_csv("data.csv")
+df = df.drop(["Unnamed: 0"], axis=1)
 with open("model_knc.pkl", "rb") as f:
     model_knc = pickle.load(f)
 with open("shap_val.pickle", "rb") as f:
@@ -31,15 +32,18 @@ def pie_chart():
 
 def feature_importances_customer(index):
     df_fi = df.head(20)
-    df_fi = df.drop(["Unnamed: 0", "SK_ID_CURR"], axis=1)
+    print(df_fi)
+    df_fi = df.drop(["SK_ID_CURR"], axis=1)
     test_x = df_fi.iloc[:5]
-    train_x = df_fi.iloc[5:14]
+    print(test_x)
+    train_x = df_fi.iloc[5:21]
+    print(train_x)
     explainer = shap.KernelExplainer(model_knc.predict_proba, train_x)
     data = test_x.iloc[[index]]
     shap_values = explainer.shap_values(data)
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.pyplot(shap.force_plot(explainer.expected_value[0], shap_values[0],
-                              feature_names=df.columns, matplotlib=True))
+                              feature_names=df_fi.columns, matplotlib=True))
     st.markdown("_This force plot can provide valuable insights into how individual features contribute to the"
                 " predictions of a machine learning model. he color of each feature's bar indicates the direction of"
                 " its impact on the prediction. Blue indicates a negative impact, while red indicates a positive "
@@ -50,7 +54,7 @@ def feature_importances_customer(index):
 
 def feature_importances():
     df = pd.read_csv("data.csv")
-    df = df.drop(["Unnamed: 0", "TARGET", "SK_ID_CURR"], axis=1)
+    df = df.drop(["TARGET", "SK_ID_CURR"], axis=1)
     fig, ax = plt.subplots(figsize=(10, 10))
     shap.summary_plot(shap_values, features=df.columns, max_display=10)
     st.pyplot(fig)
@@ -209,7 +213,7 @@ def main():
         valid_id = validator_id(id)
         if valid_id == 1:
             st.subheader("Creditworthiness prediction for the customer " + id + ":")
-            api_uri = 'https://scoring-credit-app-e49e74730d55.herokuapp.com/prediction'
+            api_uri = 'https://credit-api-njlmpioyhq-uc.a.run.app/prediction'
             index = id_to_index(id)
             pred, proba = request_prediction(api_uri, index)
             st.text("The score is : " + proba + ", so the customer is " + pred)
