@@ -31,19 +31,12 @@ def pie_chart():
 
 
 def feature_importances_customer(index):
-    df_fi = df.head(20)
-    print(df_fi)
-    df_fi = df.drop(["SK_ID_CURR"], axis=1)
-    test_x = df_fi.iloc[:5]
-    print(test_x)
-    train_x = df_fi.iloc[5:21]
-    print(train_x)
-    explainer = shap.KernelExplainer(model_knc.predict_proba, train_x)
-    data = test_x.iloc[[index]]
-    shap_values = explainer.shap_values(data)
     st.set_option('deprecation.showPyplotGlobalUse', False)
-    st.pyplot(shap.force_plot(explainer.expected_value[0], shap_values[0],
-                              feature_names=df_fi.columns, matplotlib=True))
+    response = requests.post("http://172.20.10.8:5000/shap_plot", json={"value": index})
+    data_shap = response.json()
+    content_html = data_shap['key']
+    st.components.v1.html(content_html)
+
     st.markdown("_This force plot can provide valuable insights into how individual features contribute to the"
                 " predictions of a machine learning model. he color of each feature's bar indicates the direction of"
                 " its impact on the prediction. Blue indicates a negative impact, while red indicates a positive "
@@ -213,17 +206,16 @@ def main():
         valid_id = validator_id(id)
         if valid_id == 1:
             st.subheader("Creditworthiness prediction for the customer " + id + ":")
-            api_uri = 'https://credit-api-njlmpioyhq-uc.a.run.app/prediction'
+            api_uri = 'http://172.20.10.8:5000/prediction'
             index = id_to_index(id)
             pred, proba = request_prediction(api_uri, index)
             st.text("The score is : " + proba + ", so the customer is " + pred)
 
+            st.subheader("Feature importances for the customer " + id + ":")
+            feature_importances_customer(index)
+
         else:
             st.text("Please enter a valid id!")
-
-        st.subheader("Feature importances for the customer " + id + ":")
-        index = id_to_index(id)
-        feature_importances_customer(index)
 
 
 if __name__ == '__main__':
