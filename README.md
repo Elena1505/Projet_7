@@ -19,9 +19,16 @@ leurs clients de disposer de leurs informations personnelles et de les explorer 
 ## Construction:
 Dans ce dépôt, vous trouverez plusieurs fichiers:
 
-- "script.py" : préparation des données, entraînement et configuration du modèle de classification
+- "script.py" : code contenant la préparation des données, l'entraînement et la configuration du modèle de classification
   (LGBMClassifier).
-
+- "app.py" : code permettant de déployer le modèle sous forme d'API.
+- "dashboard.py" : code permettant de généer le dashboard.
+- "data_drift.zip" : tableau HTML d'analyse de data drift réalisé à partir d'evidently.
+- "datadrift.ipynb" : notebook permettant de générer le tableau d'analyse de data drift réalisé à parti d'evidently.
+- "feature_importances.py" : code permettant de générer les shap values pour les feature importances.
+- "test_id_to_index", "test_prediction", "test_valid_id" : code permettant de générer des tests unitaires. 
+- "model.pkl", "model_knc" : modèles enregistrés au format pickle. 
+- "shap_val.pickle" : shap values enregistrées au format pickle pour les feature importances.
 ## Données:
 - Les données ont été téléchargés à cette adresse : https://www.kaggle.com/c/home-credit-default-risk/data
 
@@ -33,7 +40,7 @@ Différents packages Python ont été utilisés:
 
 - mlflow 2.1.1
 - pandas 1.4.4
-- numpy 1.21.5
+- numpy 1.23.5
 - scikit-learn 1.0.2
 - lightgbm 3.3.5
 - imbalanced-learn 0.10.1
@@ -45,3 +52,4 @@ Différents packages Python ont été utilisés:
 - matplotlib 3.5.2
 - evidently 0.2.8
 - pytest 7.4.0
+- Flask 1.1.2
