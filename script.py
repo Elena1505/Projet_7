@@ -21,7 +21,6 @@ from scipy.stats import uniform as sp_randFloat
 from mlflow.models.signature import infer_signature
 
 
-
 # Preprocess application_train.csv
 def application_train(num_rows=None, nan_as_category=False):
     # Read data
@@ -186,5 +185,3 @@ if __name__ == "__main__":
         test_y.to_csv('test_y.csv')
         with open("best_threshold.pickle", "wb") as f:
             pickle.dump(best_threshold, f)
-
-
